@@ -86,7 +86,7 @@ def main(argv):
 											'Standard_target_OB','Operator_OB','Helper_OB',
 											'Actual_target_OB','path', 'file', 'sheet'])
 
-	for key, df in enumerate(layout_dfs):
+	for key, df in enumerate(all_files):
 		
 		try:
 			start_row = df[df[df.columns[1]]=='Operation'].index[0]
@@ -117,7 +117,6 @@ def main(argv):
 
 	print(process_info_df.count())
 
-##
 
 	ob_df = pd.merge(ob_info_df, process_info_df, on=['path', 'file', 'sheet'])
 
@@ -274,21 +273,21 @@ def main(argv):
 	len(main_ob)
 
 	#checking if the column names are same
-	[item for item in DF.columns if item not in main_ob.columns.unique()]
+	print([item for item in DF.columns if item not in main_ob.columns.unique()])
 
 
 
 	#checking if the styles are already in the main OB master data
 	style_list = [item for item in DF['Style_OB'].unique() if item in main_ob["Style_OB"].unique()]
 
-	style_list
+	print(style_list)
 
 	#This list should be empty, if not we need to look for the styles in the main database first (workbench ob table) and if 
 	#they are there and have the same total SVM's, we will remove the files from the raw folder we are currently working on and extract 
 	#again till the list is empty. But if the SVM's are different then we need to talk to the collection team to be sure whether they 
 	#are new styles or not.
 	​
-
+	
 	style_dict_db = {}
 	for key,data in DF[DF['Style_OB'].isin(style_list)].groupby(by='Style_OB'):
 		style_dict_db[key] = float(str(data.ttl_smv.unique()[0])[:5])
