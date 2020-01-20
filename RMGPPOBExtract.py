@@ -9,11 +9,6 @@ import ExcelExtraction as EE
 import sys
 
 
-
-
-
-
-
 def main(argv):
 
 	print("----------------------------------------------------------")
@@ -151,6 +146,7 @@ def main(argv):
 		len(ob_df.drop_duplicates(['Style_OB', 'Process_OB']))))
 
 
+	input()
 
 	ob_df.drop_duplicates(['Style_OB', 'Process_OB'],inplace=True)
 
