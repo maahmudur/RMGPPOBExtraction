@@ -351,13 +351,11 @@ def main(argv):
 
 	today_ = ''.join(str(datetime.datetime.today().date()).split('-'))
 	DF.to_csv("../../Done/1301 OB updated "+today_+".csv", index=False,encoding='utf-8')
-	#DF.to_pickle("../../Done/1301 OB updated "+today_)
-	#main_ob.to_csv("../../Done/MasterOB "+today_+".csv",index=False)
+	DF.to_pickle("../../Done/1301 OB updated "+today_)
+	main_ob.to_csv("../../Done/MasterOB "+today_+".csv",index=False)
 
 
 	print("Upload only the latest extracted file, not the main file (MasterOB) we just made")
-
-	print("SUCCESS \n") 
 
 
 	return
