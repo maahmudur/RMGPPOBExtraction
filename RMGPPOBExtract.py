@@ -11,28 +11,32 @@ import sys
 
 def main(argv):
 
-	print("----------------------------------------------------------")
+	pd.set_option('mode.chained_assignment', None)
+
+	print("#######################################################")
+	print("#######################START###########################")
 	print()
 
 
+	print("#######################-01-############################\n")
 
-	path = argv[0]
-	error = False
-
-	# print("source file path: ",path)
+	try:
+		path = argv[0]
+	except IndexError:
+		path = input("Please enter the folder path name where the RAW OBs are: \n")
 
 	os.chdir(path)
+
 
 	count = 0
 	for root, dirs, files in os.walk(path):
 		for file_ in files:
 			count += 1
 	
-	print ("Total number of files available: ", count)
-	input()
+	print ("Total number of available files : ", count)
+
 
 	all_files = EE.extract_all_files(path)
-	#print(len(all_files))
 
 
 	sheets = []
@@ -40,6 +44,7 @@ def main(argv):
 		if df.sheet.values[0] not in sheets:
 			sheets.append(df.sheet.values[0])
 
+	print ("Available sheet names in files : \n", sheets)
 
 	layout_dfs = []
 	for key, df in enumerate(all_files):
@@ -47,9 +52,8 @@ def main(argv):
 			layout_dfs.append(df.copy())
 
 
-	print()
-	print("Available OB file count ",len(layout_dfs))
-	input()
+	print("Available OB file (Layout.) count ",len(layout_dfs))
+	input("\nPress Enter To Proceed")
 
 
 	ob_info_df = pd.DataFrame(columns=['Buyer_OB','Style_OB','Order_number_OB' ,'path', 'file', 'sheet'] )
@@ -62,14 +66,8 @@ def main(argv):
 													  data=[buyer_, style_, order_, df.path[0], df.file[0], df.sheet[0]]) 
 
 
-	print("Total style count: ",len(ob_info_df.Style_OB))
-	print()
-
-
-
-	print()
-	print(ob_info_df.count())
-	input()
+	print("#######################-02-############################\n")
+	print("Styles information count: \n",ob_info_df.count())
 
 
 
@@ -104,11 +102,10 @@ def main(argv):
 		
 		process_info_df = pd.concat([process_info_df, process_df], ignore_index=True)
 
-
-	print()
-	print("Process information count: \n\n",process_info_df.count())
-	print()
-
+	input("\nPress Enter To Proceed")
+	print("#######################-03-############################\n")
+	print("Process information count: \n",process_info_df.count())
+	input("\nPress Enter To Proceed")
 
 	ob_df = pd.merge(ob_info_df, process_info_df, on=['path', 'file', 'sheet'])
 
@@ -132,21 +129,23 @@ def main(argv):
 	ob_df.Operator_OB = ob_df.Operator_OB.replace(np.nan, 0)
 	ob_df.Helper_OB = ob_df.Helper_OB.replace(np.nan, 0)
 
-	input()
-	print("Operation Breakdown Dataset information ")
-	input()
+	print("#######################-04-############################\n")
+	print("Operation Breakdown Dataset information: \n")
 	print(ob_df.info())
+	input("\nPress Enter To Proceed")
+
 
 
 
 	originalDF = ob_df.copy()
 
 
-	print("Total Observation: {}, After dropping duplicates: {}".format(len(ob_df),
+
+
+	print("#######################-05-############################\n")
+	print("Total Observation Count: {}, After Dropping Duplicates: {}".format(len(ob_df),
 		len(ob_df.drop_duplicates(['Style_OB', 'Process_OB']))))
 
-
-	input()
 
 	ob_df.drop_duplicates(['Style_OB', 'Process_OB'],inplace=True)
 
@@ -166,9 +165,9 @@ def main(argv):
 	# print (len(ob_df.groupby(by=['Style_OB','path', 'file'])))
 
 
-	for key, data in tqdm(ob_df.groupby(by=['Style_OB','path', 'file'])):
-		ob_df.ix[data.index,"Total_SMV"] = data.Individual_SMV_OB.sum()
-		ob_df.ix[data.index,"operation_id"] = pd.Series([i for i in range(len(data)+1) if i != 0],data.index)
+	for key, data in ob_df.groupby(by=['Style_OB','path', 'file']):
+		ob_df.loc[data.index,"Total_SMV"] = data.Individual_SMV_OB.sum()
+		ob_df.loc[data.index,"operation_id"] = pd.Series([i for i in range(len(data)+1) if i != 0],data.index)
 
 
 # 	ob_df[pd.isnull(ob_df["operation_id"])]
@@ -196,8 +195,11 @@ def main(argv):
 	bkupDF['allocated_mp'] = pd.Series([np.ceil(np.sum([i,j])) for i,j in zip(bkupDF['operator_ob'],bkupDF['helper_ob'])],index=bkupDF.index)
 
 
-	print()
-	print("Manpower unique values(should be <10): ",bkupDF['allocated_mp'].unique())
+
+	print("\nManpower unique values: {} (should be <10)\n".format(bkupDF['allocated_mp'].unique()))
+
+
+	print("Copying observations for multiple manpower")
 
 # 	len(bkupDF[bkupDF.allocated_mp == 0])
 
@@ -210,14 +212,14 @@ def main(argv):
 	DF = pd.DataFrame(columns=bkupDF.columns)
 	DF['op_no_ipa'] = np.nan
 	for row in tqdm(bkupDF.index):
-		if int(bkupDF.ix[row,'allocated_mp'])>1:   
-			for i in range(int(bkupDF.ix[row,'allocated_mp'])):
-				values = bkupDF.ix[row]
-				values["op_no_ipa"] = str(int(bkupDF.ix[row,"operation_id"]))+letters[i]
+		if int(bkupDF.loc[row,'allocated_mp'])>1:   
+			for i in range(int(bkupDF.loc[row,'allocated_mp'])):
+				values = bkupDF.loc[row]
+				values["op_no_ipa"] = str(int(bkupDF.loc[row,"operation_id"]))+letters[i]
 				DF.loc[len(DF)] = values
 		else:
-			values = bkupDF.ix[row]
-			values["op_no_ipa"] = str(int(bkupDF.ix[row,"operation_id"]))
+			values = bkupDF.loc[row]
+			values["op_no_ipa"] = str(int(bkupDF.loc[row,"operation_id"]))
 			DF.loc[len(DF)] = values
 
 
@@ -249,8 +251,7 @@ def main(argv):
 	DF.rename(columns=col_dict,inplace=True)
 
 	print()
-	print ("Extracted dataset length: {}".format(len(DF)))
-
+	print ("Extracted dataset length: {}\n".format(len(DF)))
 
 # Check if the styles have already been extracted, if not we need to append those with the master OB file.
 
@@ -262,6 +263,7 @@ def main(argv):
 
 
 	print ("Master OB Length: {}".format(len(main_ob)))
+
 
 	#checking if the column names are same
 	if len([item for item in DF.columns if item not in main_ob.columns.unique()])>1:
@@ -285,10 +287,8 @@ def main(argv):
 	if len(style_list)>1:
 		
 		print()
-		print("Styles already extracted are: ")
-		print(style_list)
-		input()
-
+		print("Following styles are already extracted before: \n {}".format(style_list))
+		
 		style_dict_db = {}
 		for key,data in DF[DF['Style_OB'].isin(style_list)].groupby(by='Style_OB'):
 			style_dict_db[key] = float(str(data.ttl_smv.unique()[0])[:5])
@@ -301,11 +301,11 @@ def main(argv):
 
 
 		print()
-		print("Styles with their Total SMVs")
+		print("\nStyles with their Total SMVs")
 		print()
-		print("new_dataset:", style_dict_db)
-		print("master_dataset", style_dict_maindb)
-		input()
+		print("New Dataset:   ", style_dict_db)
+		print("Master Dataset:", style_dict_maindb)
+
 
 
 		del_style_list = []
@@ -318,7 +318,7 @@ def main(argv):
 				DF.loc[indices,'Style_OB'] = new_style
 
 
-		print("{} styles will be removed".format(del_style_list))
+		print("\n So {} styles will be removed\n".format(del_style_list))
 
 
 		del_indices = DF[DF.Style_OB.isin(del_style_list)].index
@@ -340,7 +340,11 @@ def main(argv):
 		for file_ in del_files:
 			os.remove(del_path+"\\"+file_)
 
+		print("Deleted files from the folder are following:\n\n {}".format(del_files))
 
+
+	input("\nPress Enter To Proceed")
+	print("#######################-06-############################\n")
 	# Updatting Master File
 
 	len(main_ob)
@@ -360,14 +364,10 @@ def main(argv):
 	main_ob.to_csv("../../Done/MasterOB.csv",index=False)
 
 
-	print("Upload only the latest extracted file, not the main file (MasterOB) we just made")
-
-
-
-
-
-	print()
-	print("----------------------------------------------------------")
+	print("#######################################################\n")
+	print("Output files have been generated\n")
+	print("Upload only the latest extracted file, not the main file (MasterOB) we just made\n")
+	print("#######################END############################\n")
 
 	return
 
